@@ -49,7 +49,7 @@ DAPO 从四个维度系统性地修复 GRPO：
 
 token-level 概率：
 
-$$\pi_\theta(o_{i,t} | q, o_{i,<t})$$
+$$\pi_\theta(o_{i,t} | q, o_{i,\lt t})$$
 
 ### Reward
 
@@ -73,7 +73,7 @@ $$L_{\text{GRPO}} = \frac{1}{G} \sum_{i=1}^G \frac{1}{T_i} \sum_{t=1}^{T_i} \min
 
 其中 token-level importance ratio：
 
-$$w_{i,t} = \frac{\pi_\theta(o_{i,t} | q, o_{i,<t})}{\pi_{\theta_{\text{old}}}(o_{i,t} | q, o_{i,<t})}$$
+$$w_{i,t} = \frac{\pi_\theta(o_{i,t} | q, o_{i,\lt t})}{\pi_{\theta_{\text{old}}}(o_{i,t} | q, o_{i,\lt t})}$$
 
 注意这里的 $\frac{1}{T_i}$——这是问题的根源。
 

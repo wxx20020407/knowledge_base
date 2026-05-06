@@ -8,7 +8,7 @@
 
 PPO 和 GRPO 都使用 **token-level importance ratio**：
 
-$$r_t(\theta) = \frac{\pi_\theta(y_t | x, y_{<t})}{\pi_{\theta_{\text{old}}}(y_t | x, y_{<t})}$$
+$$r_t(\theta) = \frac{\pi_\theta(y_t | x, y_{\lt t})}{\pi_{\theta_{\text{old}}}(y_t | x, y_{\lt t})}$$
 
 在更新策略时，需要计算整个序列的 ratio：
 
@@ -42,7 +42,7 @@ $$\prod_{t=1}^{T} (1 + \epsilon_t) \approx 1 + \sum_{t=1}^{T} \epsilon_t + \text
 - $y = (y_1, y_2, ..., y_T)$：生成的输出序列
 - $T$：序列长度（token 数量）
 - $y_t$：第 $t$ 个 token
-- $y_{<t} = (y_1, ..., y_{t-1})$：第 $t$ 步之前的历史 token
+- $y_{\lt t} = (y_1, ..., y_{t-1})$：第 $t$ 步之前的历史 token
 
 ### Policy 相关
 
@@ -51,11 +51,11 @@ $$\prod_{t=1}^{T} (1 + \epsilon_t) \approx 1 + \sum_{t=1}^{T} \epsilon_t + \text
 
 token-level 概率：
 
-$$\pi_\theta(y_t | x, y_{<t})$$
+$$\pi_\theta(y_t | x, y_{\lt t})$$
 
 sequence-level 概率（token 概率的连乘）：
 
-$$\pi_\theta(y|x) = \prod_{t=1}^{T} \pi_\theta(y_t | x, y_{<t})$$
+$$\pi_\theta(y|x) = \prod_{t=1}^{T} \pi_\theta(y_t | x, y_{\lt t})$$
 
 ### Reward 与 Advantage
 
@@ -77,7 +77,7 @@ $$A_i = r_i - \bar{r}$$
 
 ### PPO 的 Token-level Ratio
 
-$$r_t(\theta) = \frac{\pi_\theta(y_t | x, y_{<t})}{\pi_{\theta_{\text{old}}}(y_t | x, y_{<t})}$$
+$$r_t(\theta) = \frac{\pi_\theta(y_t | x, y_{\lt t})}{\pi_{\theta_{\text{old}}}(y_t | x, y_{\lt t})}$$
 
 每个 token 有一个 ratio，需要分别计算 advantage 和做 clipping。
 
@@ -85,7 +85,7 @@ $$r_t(\theta) = \frac{\pi_\theta(y_t | x, y_{<t})}{\pi_{\theta_{\text{old}}}(y_t
 
 GRPO 去掉了 Critic，用 group relative advantage 替代。但 importance ratio 仍是 token-level 的：
 
-$$\frac{\pi_\theta(o_i|q)}{\pi_{\theta_{\text{old}}}(o_i|q)} = \prod_{t=1}^{T} \frac{\pi_\theta(o_{i,t} | q, o_{i,<t})}{\pi_{\theta_{\text{old}}}(o_{i,t} | q, o_{i,<t})}$$
+$$\frac{\pi_\theta(o_i|q)}{\pi_{\theta_{\text{old}}}(o_i|q)} = \prod_{t=1}^{T} \frac{\pi_\theta(o_{i,t} | q, o_{i,\lt t})}{\pi_{\theta_{\text{old}}}(o_{i,t} | q, o_{i,\lt t})}$$
 
 **方差问题依然存在：**
 
@@ -105,7 +105,7 @@ $$R(\theta) = \frac{\pi_\theta(y|x)}{\pi_{\theta_{\text{old}}}(y|x)}$$
 
 展开为 token-level 的连乘：
 
-$$R(\theta) = \prod_{t=1}^{T} \frac{\pi_\theta(y_t | x, y_{<t})}{\pi_{\theta_{\text{old}}}(y_t | x, y_{<t})}$$
+$$R(\theta) = \prod_{t=1}^{T} \frac{\pi_\theta(y_t | x, y_{\lt t})}{\pi_{\theta_{\text{old}}}(y_t | x, y_{\lt t})}$$
 
 这看起来和 GRPO 的连乘一样？关键区别在下一步——length normalization。
 
@@ -119,7 +119,7 @@ $$\tilde{R}(\theta) = R(\theta)^{\frac{1}{T}}$$
 
 取对数可以看得更清楚：
 
-$$\log \tilde{R}(\theta) = \frac{1}{T} \log R(\theta) = \frac{1}{T} \sum_{t=1}^{T} \log \frac{\pi_\theta(y_t | x, y_{<t})}{\pi_{\theta_{\text{old}}}(y_t | x, y_{<t})}$$
+$$\log \tilde{R}(\theta) = \frac{1}{T} \log R(\theta) = \frac{1}{T} \sum_{t=1}^{T} \log \frac{\pi_\theta(y_t | x, y_{\lt t})}{\pi_{\theta_{\text{old}}}(y_t | x, y_{\lt t})}$$
 
 这是一个**平均 log-ratio**——把连乘变成了平均。每个 token 的贡献被等权平均，不再受序列长度影响。
 

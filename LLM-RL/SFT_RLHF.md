@@ -8,7 +8,7 @@
 
 语言模型的训练目标是 next-token prediction：
 
-$$\max \log P(x) = \max \sum_t \log P(x_t | x_{<t})$$
+$$\max \log P(x) = \max \sum_t \log P(x_t | x_{\lt t})$$
 
 但用户期望的是 **helpful（有帮助）、honest（诚实）、harmless（无害）** 的回答。这两个目标之间存在根本性的 mismatch：一个在预测分布上很好的模型，可能生成不听指令、编造事实、或不安全的内容。
 
@@ -31,7 +31,7 @@ InstructGPT 提出了三阶段 pipeline：
 - $x$：prompt（用户输入的指令）
 - $y$：模型输出的完整序列
 - $y_t$：序列中第 $t$ 个 token
-- $y_{<t} = (y_1, ..., y_{t-1})$：第 $t$ 步之前的历史 token
+- $y_{\lt t} = (y_1, ..., y_{t-1})$：第 $t$ 步之前的历史 token
 - $T$：序列长度
 
 ### Policy
@@ -41,7 +41,7 @@ InstructGPT 提出了三阶段 pipeline：
 
 token-level 概率分解：
 
-$$\pi_\theta(y|x) = \prod_{t=1}^{T} \pi_\theta(y_t | x, y_{<t})$$
+$$\pi_\theta(y|x) = \prod_{t=1}^{T} \pi_\theta(y_t | x, y_{\lt t})$$
 
 ### Reward Model
 
@@ -193,7 +193,7 @@ $\beta$ 控制两者的平衡：
 
 Token-level importance ratio：
 
-$$r_t(\theta) = \frac{\pi_\theta(y_t | x, y_{<t})}{\pi_{\theta_{\text{old}}}(y_t | x, y_{<t})}$$
+$$r_t(\theta) = \frac{\pi_\theta(y_t | x, y_{\lt t})}{\pi_{\theta_{\text{old}}}(y_t | x, y_{\lt t})}$$
 
 Clipped objective：
 
