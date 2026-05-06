@@ -32,7 +32,7 @@ $$A_t = r_t + \gamma V(s_{t+1}) - V(s_t)$$
 - $V(s_t)$：当前状态的估计价值（"预期回报"）
 - $A_t$：两者之差——"这个动作比预期好多少？"
 
-Actor 根据 advantage 来更新：$A_t \gt  0$ 的动作增加概率，$A_t \lt  0$ 的动作降低概率。
+Actor 根据 advantage 来更新：$A_t \gt 0$ 的动作增加概率，$A_t \lt 0$ 的动作降低概率。
 
 **直觉：** Actor 是"做事的人"，Critic 是"打分的人"。Critic 告诉 Actor"你这一步做得好不好"，Actor 根据反馈调整策略。
 
@@ -107,8 +107,8 @@ $$\sigma = \sqrt{\frac{1}{G} \sum_{j=1}^{G} (r_j - \mu)^2}$$
 $$A_i = \frac{r_i - \mu}{\sigma}$$
 
 **直觉：** $A_i$ 表示第 $i$ 个回答在 group 内的"相对表现"。
-- $A_i \gt  0$：比 group 平均好 → 应该增加这个输出的概率
-- $A_i \lt  0$：比 group 平均差 → 应该降低这个输出的概率
+- $A_i \gt 0$：比 group 平均好 → 应该增加这个输出的概率
+- $A_i \lt 0$：比 group 平均差 → 应该降低这个输出的概率
 - $\sigma$ 归一化：使得不同 group 的 advantage 量级一致
 
 **关键：** 这个 advantage 完全不需要 Critic！它纯粹基于采样结果的相对比较。

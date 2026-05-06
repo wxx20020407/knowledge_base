@@ -141,7 +141,7 @@ $$L_{\text{RM}}(\phi) = -\mathbb{E}_{(x, y_w, y_l) \sim D_{\text{pref}}} \left[ 
 
 这个 loss 的设计非常精巧：
 
-1. **优化目标**：让 $r_\phi(x, y_w) - r_\phi(x, y_l) \gt  0$，即好回答的 reward 高于差回答
+1. **优化目标**：让 $r_\phi(x, y_w) - r_\phi(x, y_l) \gt 0$，即好回答的 reward 高于差回答
 2. **Sigmoid 的作用**：当差值很大时，梯度趋于 0（已经学好了，不需要再更新）；当差值很小或为负时，梯度很大（还需要继续学习）
 3. **Pairwise 而非 pointwise**：不需要绝对 reward 值准确，只需要相对排序正确——这比精确预测 reward 容易得多
 
@@ -227,7 +227,7 @@ $$\pi_\theta \approx \pi_{\text{SFT}} \quad \text{(KL constraint)}$$
 
 | 模块 | 目标 | 学什么 |
 |------|------|--------|
-| SFT | max log π_θ(y\* | x) | 怎么说话（格式、模式） |
+| SFT | max log π\_θ(y\* given x) | 怎么说话（格式、模式） |
 | RM | max log σ(rw - rl) | 什么是好话（偏好排序） |
 | RLHF | max rφ - β·D\_KL | 多说好话（重分配概率） |
 
