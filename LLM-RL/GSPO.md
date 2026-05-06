@@ -8,7 +8,7 @@
 
 PPO 和 GRPO 都使用 **token-level importance ratio**：
 
-$$r_t(\theta) = \frac{\pi_\theta(y_t | x, y_{\lt t})}{\pi_{\theta_{\text{old}}}(y_t | x, y_{\lt t})}$$
+$$r_t(\theta) = \frac{\pi_\theta(y_t \mid x, y_{\lt t})}{\pi_{\theta_{\text{old}}}(y_t \mid x, y_{\lt t})}$$
 
 在更新策略时，需要计算整个序列的 ratio：
 
@@ -46,16 +46,16 @@ $$\prod_{t=1}^{T} (1 + \epsilon_t) \approx 1 + \sum_{t=1}^{T} \epsilon_t + \text
 
 ### Policy 相关
 
-- $\pi_\theta(y|x)$：当前策略（sequence-level 概率）
-- $\pi_{\theta_{\text{old}}}(y|x)$：旧策略
+- $\pi_\theta(y\mid x)$：当前策略（sequence-level 概率）
+- $\pi_{\theta_{\text{old}}}(y\mid x)$：旧策略
 
 token-level 概率：
 
-$$\pi_\theta(y_t | x, y_{\lt t})$$
+$$\pi_\theta(y_t \mid x, y_{\lt t})$$
 
 sequence-level 概率（token 概率的连乘）：
 
-$$\pi_\theta(y|x) = \prod_{t=1}^{T} \pi_\theta(y_t | x, y_{\lt t})$$
+$$\pi_\theta(y\mid x) = \prod_{t=1}^{T} \pi_\theta(y_t \mid x, y_{\lt t})$$
 
 ### Reward 与 Advantage
 
@@ -77,7 +77,7 @@ $$A_i = r_i - \bar{r}$$
 
 ### PPO 的 Token-level Ratio
 
-$$r_t(\theta) = \frac{\pi_\theta(y_t | x, y_{\lt t})}{\pi_{\theta_{\text{old}}}(y_t | x, y_{\lt t})}$$
+$$r_t(\theta) = \frac{\pi_\theta(y_t \mid x, y_{\lt t})}{\pi_{\theta_{\text{old}}}(y_t \mid x, y_{\lt t})}$$
 
 每个 token 有一个 ratio，需要分别计算 advantage 和做 clipping。
 
@@ -85,7 +85,7 @@ $$r_t(\theta) = \frac{\pi_\theta(y_t | x, y_{\lt t})}{\pi_{\theta_{\text{old}}}(
 
 GRPO 去掉了 Critic，用 group relative advantage 替代。但 importance ratio 仍是 token-level 的：
 
-$$\frac{\pi_\theta(o_i|q)}{\pi_{\theta_{\text{old}}}(o_i|q)} = \prod_{t=1}^{T} \frac{\pi_\theta(o_{i,t} | q, o_{i,\lt t})}{\pi_{\theta_{\text{old}}}(o_{i,t} | q, o_{i,\lt t})}$$
+$$\frac{\pi_\theta(o_i\mid q)}{\pi_{\theta_{\text{old}}}(o_i\mid q)} = \prod_{t=1}^{T} \frac{\pi_\theta(o_{i,t} \mid q, o_{i,\lt t})}{\pi_{\theta_{\text{old}}}(o_{i,t} \mid q, o_{i,\lt t})}$$
 
 **方差问题依然存在：**
 
@@ -101,11 +101,11 @@ $$\text{Var}(R) \propto T$$
 
 GSPO 直接在序列级别定义 importance ratio：
 
-$$R(\theta) = \frac{\pi_\theta(y|x)}{\pi_{\theta_{\text{old}}}(y|x)}$$
+$$R(\theta) = \frac{\pi_\theta(y\mid x)}{\pi_{\theta_{\text{old}}}(y\mid x)}$$
 
 展开为 token-level 的连乘：
 
-$$R(\theta) = \prod_{t=1}^{T} \frac{\pi_\theta(y_t | x, y_{\lt t})}{\pi_{\theta_{\text{old}}}(y_t | x, y_{\lt t})}$$
+$$R(\theta) = \prod_{t=1}^{T} \frac{\pi_\theta(y_t \mid x, y_{\lt t})}{\pi_{\theta_{\text{old}}}(y_t \mid x, y_{\lt t})}$$
 
 这看起来和 GRPO 的连乘一样？关键区别在下一步——length normalization。
 
@@ -119,7 +119,7 @@ $$\tilde{R}(\theta) = R(\theta)^{\frac{1}{T}}$$
 
 取对数可以看得更清楚：
 
-$$\log \tilde{R}(\theta) = \frac{1}{T} \log R(\theta) = \frac{1}{T} \sum_{t=1}^{T} \log \frac{\pi_\theta(y_t | x, y_{\lt t})}{\pi_{\theta_{\text{old}}}(y_t | x, y_{\lt t})}$$
+$$\log \tilde{R}(\theta) = \frac{1}{T} \log R(\theta) = \frac{1}{T} \sum_{t=1}^{T} \log \frac{\pi_\theta(y_t \mid x, y_{\lt t})}{\pi_{\theta_{\text{old}}}(y_t \mid x, y_{\lt t})}$$
 
 这是一个**平均 log-ratio**——把连乘变成了平均。每个 token 的贡献被等权平均，不再受序列长度影响。
 
@@ -158,13 +158,13 @@ $$L = \frac{1}{K} \sum_{i=1}^{K} \min \left( \tilde{R}_i(\theta) A_i, \; \text{c
 
 ### 4.5 梯度形式
 
-$$\nabla_\theta L = \mathbb{E} \left[ \nabla_\theta \log \pi_\theta(y|x) \cdot w(y) \right]$$
+$$\nabla_\theta L = \mathbb{E} \left[ \nabla_\theta \log \pi_\theta(y\mid x) \cdot w(y) \right]$$
 
 其中权重函数：
 
 $$w(y) = \begin{cases} A \cdot \tilde{R}(\theta), & \text{未被裁剪} \\ A \cdot \text{clip}(\tilde{R}(\theta)), & \text{被裁剪} \end{cases}$$
 
-**直觉：** 梯度方向由 $\log \pi_\theta(y|x)$ 决定（"如何调整策略让这个输出更可能/更不可能"），梯度大小由 $w(y)$ 控制（"调整多少"）。$\tilde{R}(\theta)$ 和 clipping 共同决定了步长。
+**直觉：** 梯度方向由 $\log \pi_\theta(y\mid x)$ 决定（"如何调整策略让这个输出更可能/更不可能"），梯度大小由 $w(y)$ 控制（"调整多少"）。$\tilde{R}(\theta)$ 和 clipping 共同决定了步长。
 
 ---
 
@@ -204,9 +204,9 @@ $$\text{Var}(\tilde{R}_{\text{GSPO}}) \propto 1$$
 
 | 序列长度 | GRPO ratio 方差 | GSPO ratio 方差 |
 |---------|----------------|----------------|
-| $T = 100$ | $\propto 100$ | $\propto 1$ |
-| $T = 1000$ | $\propto 1000$ | $\propto 1$ |
-| $T = 5000$ | $\propto 5000$ | $\propto 1$ |
+| T = 100 | ∝ 100 | ∝ 1 |
+| T = 1000 | ∝ 1000 | ∝ 1 |
+| T = 5000 | ∝ 5000 | ∝ 1 |
 
 在长推理链场景下，GSPO 的优势是压倒性的。
 
@@ -260,4 +260,5 @@ DAPO 和 GSPO 的改进是正交的：
 
 ## 9. 一句话总结
 
-> GSPO = 用 sequence-level 的长度归一化 ratio 替代 token-level ratio，将方差从 $O(T)$ 降至 $O(1)$，从根本上解决长序列 RL 的高方差问题。
+> GSPO = 用 sequence-level 的长度归一化 ratio 替代 token-level ratio，将方差从 $O(T)$ 降至 $O(1)$，从根本上解决长序列 RL 的高方差问题。102041020410204
+102041020410204

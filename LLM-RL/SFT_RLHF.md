@@ -8,7 +8,7 @@
 
 语言模型的训练目标是 next-token prediction：
 
-$$\max \log P(x) = \max \sum_t \log P(x_t | x_{\lt t})$$
+$$\max \log P(x) = \max \sum_t \log P(x_t \mid x_{\lt t})$$
 
 但用户期望的是 **helpful（有帮助）、honest（诚实）、harmless（无害）** 的回答。这两个目标之间存在根本性的 mismatch：一个在预测分布上很好的模型，可能生成不听指令、编造事实、或不安全的内容。
 
@@ -36,12 +36,12 @@ InstructGPT 提出了三阶段 pipeline：
 
 ### Policy
 
-- $\pi_\theta(y|x)$：当前模型（policy），参数为 $\theta$，给定 prompt $x$ 生成序列 $y$ 的概率
+- $\pi_\theta(y\mid x)$：当前模型（policy），参数为 $\theta$，给定 prompt $x$ 生成序列 $y$ 的概率
 - $\pi_{\text{SFT}}$：SFT 模型，作为 RL 阶段的初始化策略和 KL 参考
 
 token-level 概率分解：
 
-$$\pi_\theta(y|x) = \prod_{t=1}^{T} \pi_\theta(y_t | x, y_{\lt t})$$
+$$\pi_\theta(y\mid x) = \prod_{t=1}^{T} \pi_\theta(y_t \mid x, y_{\lt t})$$
 
 ### Reward Model
 
@@ -59,7 +59,7 @@ $$\pi_\theta(y|x) = \prod_{t=1}^{T} \pi_\theta(y_t | x, y_{\lt t})$$
 
 ### Step 1：SFT（监督微调）
 
-$$\max_\theta \; \mathbb{E}_{(x,y) \sim D_{\text{SFT}}} \left[ \log \pi_\theta(y|x) \right]$$
+$$\max_\theta \; \mathbb{E}_{(x,y) \sim D_{\text{SFT}}} \left[ \log \pi_\theta(y\mid x) \right]$$
 
 从预训练模型出发，用人工标注的高质量数据做监督微调。
 
@@ -89,13 +89,13 @@ $$(x, y^*) \in D_{\text{SFT}}$$
 
 ### 目标函数
 
-$$L_{\text{SFT}} = -\mathbb{E}_{(x, y^*)} \left[ \log \pi_\theta(y^* | x) \right]$$
+$$L_{\text{SFT}} = -\mathbb{E}_{(x, y^*)} \left[ \log \pi_\theta(y^* \mid x) \right]$$
 
 这就是标准的语言模型损失——让模型学习生成与人工示范一致的输出。
 
 ### 梯度
 
-$$\nabla_\theta L_{\text{SFT}} = -\nabla_\theta \log \pi_\theta(y^* | x)$$
+$$\nabla_\theta L_{\text{SFT}} = -\nabla_\theta \log \pi_\theta(y^* \mid x)$$
 
 直觉：梯度方向是"让 $y^*$ 中每个 token 的概率更高"。
 
@@ -193,7 +193,7 @@ $\beta$ 控制两者的平衡：
 
 Token-level importance ratio：
 
-$$r_t(\theta) = \frac{\pi_\theta(y_t | x, y_{\lt t})}{\pi_{\theta_{\text{old}}}(y_t | x, y_{\lt t})}$$
+$$r_t(\theta) = \frac{\pi_\theta(y_t \mid x, y_{\lt t})}{\pi_{\theta_{\text{old}}}(y_t \mid x, y_{\lt t})}$$
 
 Clipped objective：
 
@@ -213,7 +213,7 @@ $$L = L_{\text{RL}} + \gamma L_{\text{LM}}$$
 
 RLHF 优化的本质是：
 
-$$\pi_\theta(y|x) \uparrow \quad \text{if} \quad r_\phi(x, y) \text{ is high}$$
+$$\pi_\theta(y\mid x) \uparrow \quad \text{if} \quad r_\phi(x, y) \text{ is high}$$
 
 但同时：
 
@@ -227,9 +227,9 @@ $$\pi_\theta \approx \pi_{\text{SFT}} \quad \text{(KL constraint)}$$
 
 | 模块 | 目标 | 学什么 |
 |------|------|--------|
-| SFT | $\max \log \pi_\theta(y^* \| x)$ | 怎么说话（格式、模式） |
-| RM | $\max \log \sigma(r_w - r_l)$ | 什么是好话（偏好排序） |
-| RLHF | $\max r_\phi - \beta D_{KL}$ | 多说好话（重分配概率） |
+| SFT | max log π_θ(y\* | x) | 怎么说话（格式、模式） |
+| RM | max log σ(rw - rl) | 什么是好话（偏好排序） |
+| RLHF | max rφ - β·D\_KL | 多说好话（重分配概率） |
 
 三者的关系是递进的：SFT 是基础，RM 是评价标准，RLHF 是优化过程。
 
@@ -284,7 +284,7 @@ InstructGPT 发现：1.3B 参数的模型经过 RLHF 后，在人类评估中优
 
 RLHF 后的策略可以近似表示为：
 
-$$\pi_{\text{RLHF}}(y|x) \propto \pi_{\text{SFT}}(y|x) \cdot \exp\left(\frac{1}{\beta} r_\phi(x, y)\right)$$
+$$\pi_{\text{RLHF}}(y\mid x) \propto \pi_{\text{SFT}}(y\mid x) \cdot \exp\left(\frac{1}{\beta} r_\phi(x, y)\right)$$
 
 这个结果可以从 KL 约束的优化问题推导出来（对 $\pi$ 求解拉格朗日对偶）。
 
@@ -350,4 +350,5 @@ RLHF 阶段需要同时维护 4 个模型：policy model、reference model（KL 
 
 ## 13. 一句话总结
 
-> RLHF = SFT 学格式 → RM 学偏好 → PPO 在 KL 约束下重分配输出概率。本质是对语言模型的输出分布做指数重加权，使高偏好的输出概率更高。
+> RLHF = SFT 学格式 → RM 学偏好 → PPO 在 KL 约束下重分配输出概率。本质是对语言模型的输出分布做指数重加权，使高偏好的输出概率更高。102041020410204
+102041020410204
